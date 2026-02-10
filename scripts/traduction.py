@@ -1,11 +1,10 @@
-from googletrans import Translator
+import requests
 import deepl
 from typing import Dict
 import time
-from config import DEEPL_API_KEY
+from config import DEEPL_API_KEY, MICROSOFT_TRANSLATOR_KEY, MICROSOFT_TRANSLATOR_REGION
 
 
-translator_google = Translator()
 translator_deepl = deepl.Translator(DEEPL_API_KEY)
 
 
@@ -15,7 +14,6 @@ def traduire_deepl(texte: str, langue_cible: str) -> str:
     langue_cible : 'en', 'ru', 'ar', 'tr'
     """
     try:
-        # Mapping des codes langues
         langue_map = {
             "en": "EN-GB",
             "ru": "RU",
@@ -41,25 +39,38 @@ def traduire_deepl(texte: str, langue_cible: str) -> str:
         return None
 
 
-def traduire_google(texte: str, langue_cible: str) -> str:
+def traduire_microsoft(texte: str, langue_cible: str) -> str:
     """
-    Traduit un texte avec Google Translate.
+    Traduit un texte avec Microsoft Translator (Azure).
     """
     try:
-        # Google Translate utilise des codes langues standard
-        result = translator_google.translate(
-            texte, src="fr", dest=langue_cible.lower()  # source français
+        endpoint = "https://api.cognitive.microsofttranslator.com/translate"
+        params = {
+            "api-version": "3.0",
+            "from": "fr",
+            "to": langue_cible.lower(),
+        }
+        headers = {
+            "Ocp-Apim-Subscription-Key": MICROSOFT_TRANSLATOR_KEY,
+            "Ocp-Apim-Subscription-Region": MICROSOFT_TRANSLATOR_REGION,
+            "Content-type": "application/json",
+        }
+        body = [{"text": texte}]
+
+        response = requests.post(
+            endpoint, params=params, headers=headers, json=body, timeout=30
         )
-        return result.text
+        response.raise_for_status()
+        return response.json()[0]["translations"][0]["text"]
 
     except Exception as e:
-        print("Erreur Google Translate :", e)
+        print("Erreur Microsoft Translator :", e)
         return None
 
 
 def traduire_texte_complet(texte: str, langues=None) -> Dict:
     """
-    Traduit un texte avec DeepL et Google pour comparaison.
+    Traduit un texte avec DeepL et Microsoft pour comparaison.
     """
     if langues is None:
         langues = ["en", "ru", "ar", "tr"]
@@ -77,9 +88,9 @@ def traduire_texte_complet(texte: str, langues=None) -> Dict:
 
         time.sleep(1)
 
-        print("  → Google...")
-        trad_google = traduire_google(texte, langue)
-        traductions[langue]["google"] = trad_google
+        print("  → Microsoft...")
+        trad_ms = traduire_microsoft(texte, langue)
+        traductions[langue]["microsoft"] = trad_ms
 
         time.sleep(1)
 

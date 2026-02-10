@@ -2,7 +2,6 @@ import os
 
 from falc import simplifier_falc
 from traduction import traduire_texte_complet
-from evaluer_traduction import evaluer_toutes_traductions
 from generer_audio import generer_audio
 from upload_audio import upload_dropbox
 from qr import creer_qr
@@ -30,11 +29,17 @@ def traiter_fiche(chemin_fiche):
     # 2. Simplification FALC
     print("\nSimplification FALC en cours")
     texte_falc = simplifier_falc(texte_original)
+    if not texte_falc:
+        print("Échec simplification FALC — arrêt du pipeline.")
+        return
     sauvegarder_fichier(texte_falc, f"data/falc/{nom_base}_falc.txt")
 
     # 3. Traductions (DeepL + Google)
     print("\nTraductions multilingues en cours")
     traductions = traduire_texte_complet(texte_falc)
+    if not traductions:
+        print("Échec traductions — arrêt du pipeline.")
+        return
 
     # Sauvegarde des traductions
     for langue, versions in traductions.items():
@@ -44,31 +49,14 @@ def traiter_fiche(chemin_fiche):
                     texte, f"data/traductions/{nom_base}_{langue}_{service}.txt"
                 )
 
-    # 4. Évaluation des traductions
-    print("\nÉvaluation automatique des traductions en cours")
-    scores = evaluer_toutes_traductions(traductions, texte_falc)
-
-    # Sauvegarde scores
-    sauvegarder_fichier(str(scores), f"data/evaluation/{nom_base}_scores.txt")
-
-    # Affichage clair pour choix humain
-    print("\nRésumé des scores pour évaluer les traductions :")
-    for langue, services in scores.items():
-        print(f"\nLangue : {langue.upper()}")
-        for service, valeurs in services.items():
-            print(
-                f"  {service.upper()} → BLEU: {valeurs['bleu']:.2f}, "
-                f"BERTScore: {valeurs['bertscore']:.3f}"
-            )
-
-    # 5. Choix humain (manuel)
+    # 4. Choix humain (manuel)
     choix_service = (
-        input("\nQuel service utiliser pour les audios ? (deepl/google) : ")
+        input("\nQuel service utiliser pour les audios ? (deepl/microsoft) : ")
         .strip()
         .lower()
     )
 
-    # 6. Génération audio + QR codes
+    # 5. Génération audio + QR codes
     print("\nGénération audio + QR codes en cours")
     for langue, versions in traductions.items():
         texte_final = versions.get(choix_service)
@@ -92,4 +80,6 @@ def traiter_fiche(chemin_fiche):
 
 if __name__ == "__main__":
     # Exemple : traiter une fiche
-    traiter_fiche("data/input/diabete.txt")
+
+    BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+    traiter_fiche(os.path.join(BASE_DIR, "data", "input", "diabete.txt"))

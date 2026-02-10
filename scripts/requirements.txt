@@ -1,0 +1,8 @@
+groq
+deepl
+requests
+gtts
+dropbox
+qrcode
+pillow
+sacrebleu

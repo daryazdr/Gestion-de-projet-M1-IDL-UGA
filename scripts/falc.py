@@ -1,5 +1,6 @@
-import anthropic
-from config import ANTHROPIC_API_KEY
+import os
+from groq import Groq
+from config import GROQ_API_KEY
 
 
 def construire_prompt_falc(texte_original: str) -> str:
@@ -48,22 +49,29 @@ Texte à simplifier :
 
 def simplifier_falc(texte_original: str) -> str:
     """
-    Simplifie un texte médical en FALC avec Claude.
+    Simplifie un texte médical en FALC avec Groq.
+    Retourne le texte simplifié ou None en cas d'erreur.
     """
 
     try:
-        # Appel API
-        client = anthropic.Anthropic(api_key=ANTHROPIC_API_KEY)
+        client = Groq(api_key=GROQ_API_KEY)
+        prompt = construire_prompt_falc(texte_original)
 
-        response = client.messages.create(
-            model="claude-3-5-sonnet-20240620",
-            max_tokens=2000,
+        # Appel
+        response = client.chat.completions.create(
+            model="llama-3.3-70b-versatile",
             messages=[
-                {"role": "user", "content": construire_prompt_falc(texte_original)}
+                {
+                    "role": "system",
+                    "content": "Tu es un assistant spécialisé en simplification FALC pour des textes médicaux.",
+                },
+                {"role": "user", "content": prompt},
             ],
+            max_tokens=2000,
         )
 
-        texte_simplifie = response.content[0].text
+        # Récupération du texte généré
+        texte_simplifie = response.choices[0].message.content
         return texte_simplifie
 
     except Exception as e:
