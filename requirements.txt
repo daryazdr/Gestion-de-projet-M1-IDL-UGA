@@ -1,0 +1,9 @@
+anthropic
+deepl
+googletrans==4.0.0rc1
+gtts
+dropbox
+qrcode
+pillow
+sacrebleu
+bert-score
