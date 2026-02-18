@@ -1,8 +1,8 @@
 groq
 deepl
 requests
-gtts
-dropbox
+edge-tts
 qrcode
 pillow
+reportlab
 sacrebleu

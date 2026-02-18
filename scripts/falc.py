@@ -7,7 +7,7 @@ def construire_prompt_falc(texte_original: str) -> str:
     return f"""
 Tu es expert en simplification FALC (Facile à Lire et à Comprendre).
 
-Règles :
+Règles de simplification :
     - Phrases courtes. Chaque phrase nouvelle commence sur une nouvelle ligne
     - Un mot n'est jamais coupé en fin de ligne [⇒ pas de tiret (-) en fin de ligne]
     - Des points (puces ou numéros) sont utilisés pour lister des thèmes ou idées dans une même phrase
@@ -37,7 +37,7 @@ Règles :
     - Les pages sont numérotées (de la manière suivante : « page 2 sur 4 »)
 
 Simplifie ce texte et :
-- Garde TOUTES les informations médicales importantes
+- Garde TOUTES les informations médicales, ne supprime rien
 - Ne change pas le sens médical
 - Reste précis sur les consignes de santé
 - Ne jamais modifier les valeurs numériques, unités, posologies

@@ -1,26 +1,40 @@
-import os
-from gtts import gTTS
+import asyncio
+from pathlib import Path
+
+import edge_tts
 
 
-def generer_audio(
-    texte: str, langue: str, nom_fichier: str, dossier_output="data/audio"
-) -> str:
+BASE_DIR = Path(__file__).resolve().parent.parent
+AUDIO_DIR = BASE_DIR / "docs" / "audio"
+
+
+VOIX = {
+    "fr": "fr-FR-DeniseNeural",
+    "en": "en-US-JennyNeural",
+    "ru": "ru-RU-SvetlanaNeural",
+    "ar": "ar-EG-SalmaNeural",
+    "tr": "tr-TR-EmelNeural",
+}
+
+
+def generer_audio(texte, langue, nom_fichier):
     """
-    Génère un fichier audio avec gTTS.
-    Retourne le chemin du fichier audio.
+    Cree un mp3 avec Microsoft Edge TTS.
     """
     try:
-        os.makedirs(dossier_output, exist_ok=True)
+        AUDIO_DIR.mkdir(parents=True, exist_ok=True)
+        voix = VOIX.get(langue.lower(), VOIX["fr"])
+        sortie = AUDIO_DIR / f"{nom_fichier}.mp3"
 
-        print(f"Génération audio {langue.upper()}...")
-        tts = gTTS(text=texte, lang=langue, slow=True)
+        async def _run():
+            tts = edge_tts.Communicate(texte, voix)
+            await tts.save(str(sortie))
 
-        chemin_fichier = os.path.join(dossier_output, f"{nom_fichier}.mp3")
-        tts.save(chemin_fichier)
+        asyncio.run(_run())
 
-        print(f"Audio créé : {chemin_fichier}")
-        return chemin_fichier
-
+        print("Audio cree:", sortie)
+        return str(sortie)
     except Exception as e:
-        print("Erreur audio :", e)
+        print("Erreur generation audio:", e)
         return None
+
