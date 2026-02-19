@@ -39,7 +39,6 @@
       border-radius: 16px;
       cursor: pointer;
       color: white;
-      background: #1f6feb;
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -55,11 +54,14 @@
       font-size: 1rem;
       line-height: 1;
     }
-    button.primary {
+    button.seek {
       background: #1761cc;
     }
-    button.secondary {
+    button.play {
       background: #1f7a3a;
+    }
+    button.pause {
+      background: #c93131;
     }
     .time {
       margin-top: 16px;
@@ -74,19 +76,19 @@
     <audio id="player" preload="metadata" src="https://daryazdr.github.io/Gestion-de-projet-M1-IDL-UGA/audio/surveillance_falc_microsoft.mp3"></audio>
 
     <div class="controls">
-      <button type="button" class="primary" aria-label="Reculer 5 secondes" onclick="seek(-5)">
+      <button type="button" class="seek" aria-label="Reculer 5 secondes" onclick="seek(-5)">
         <span class="icon">⏪</span>
         <span class="txt">5 sec</span>
       </button>
-      <button type="button" class="primary" aria-label="Avancer 5 secondes" onclick="seek(5)">
+      <button type="button" class="seek" aria-label="Avancer 5 secondes" onclick="seek(5)">
         <span class="icon">⏩</span>
         <span class="txt">5 sec</span>
       </button>
-      <button type="button" class="secondary" aria-label="Lecture" onclick="playAudio()">
+      <button type="button" class="play" aria-label="Lecture" onclick="playAudio()">
         <span class="icon">▶</span>
         <span class="txt">Play</span>
       </button>
-      <button type="button" class="secondary" aria-label="Pause" onclick="pauseAudio()">
+      <button type="button" class="pause" aria-label="Pause" onclick="pauseAudio()">
         <span class="icon">⏸</span>
         <span class="txt">Pause</span>
       </button>
