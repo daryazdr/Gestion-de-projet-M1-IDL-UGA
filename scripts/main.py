@@ -27,7 +27,9 @@ def lire_txt(path):
     raise ValueError(f"Impossible de lire le fichier texte: {path}")
 
 
-def enregistrer_image_unique(image_bytes, extension, nom_base, prefixe, index, hashes, images):
+def enregistrer_image_unique(
+    image_bytes, extension, nom_base, prefixe, index, hashes, images
+):
     if not image_bytes:
         return
 

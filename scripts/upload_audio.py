@@ -232,7 +232,9 @@ def upload_github_pages(chemin_fichier):
     repo = normaliser_repo(GITHUB_REPO)
 
     if not GITHUB_TOKEN or not repo or not GITHUB_PAGES_BASE_URL:
-        print("Config GitHub manquante: GITHUB_TOKEN, GITHUB_REPO, GITHUB_PAGES_BASE_URL")
+        print(
+            "Config GitHub manquante: GITHUB_TOKEN, GITHUB_REPO, GITHUB_PAGES_BASE_URL"
+        )
         return None
 
     fichier = Path(chemin_fichier)
@@ -248,7 +250,11 @@ def upload_github_pages(chemin_fichier):
         f"upload audio {fichier.name}",
     )
     if response_audio.status_code not in [200, 201]:
-        print("Erreur upload audio GitHub:", response_audio.status_code, response_audio.text)
+        print(
+            "Erreur upload audio GitHub:",
+            response_audio.status_code,
+            response_audio.text,
+        )
         return None
 
     audio_web_path = f"{AUDIO_WEB_DIR}/{fichier.name}"
@@ -265,7 +271,11 @@ def upload_github_pages(chemin_fichier):
         f"upload player {player_filename}",
     )
     if response_player.status_code not in [200, 201]:
-        print("Erreur upload player GitHub:", response_player.status_code, response_player.text)
+        print(
+            "Erreur upload player GitHub:",
+            response_player.status_code,
+            response_player.text,
+        )
         return None
 
     player_web_path = f"{PLAYER_WEB_DIR}/{player_filename}"
