@@ -12,7 +12,7 @@ VOIX = {
     "fr": "fr-FR-DeniseNeural",
     "en": "en-US-JennyNeural",
     "ru": "ru-RU-SvetlanaNeural",
-    "ar": "ar-EG-SalmaNeural",
+    "ar": "ar-SA-HamedNeural",
     "tr": "tr-TR-EmelNeural",
 }
 
@@ -32,9 +32,8 @@ def generer_audio(texte, langue, nom_fichier):
 
         asyncio.run(_run())
 
-        print("Audio cree:", sortie)
+        print("Audio crée:", sortie)
         return str(sortie)
     except Exception as e:
         print("Erreur generation audio:", e)
         return None
-

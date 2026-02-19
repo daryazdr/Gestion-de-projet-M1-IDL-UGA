@@ -75,4 +75,3 @@ def creer_pdf(nom_base, sections):
     except Exception as e:
         print("Erreur creation PDF:", e)
         return None
-

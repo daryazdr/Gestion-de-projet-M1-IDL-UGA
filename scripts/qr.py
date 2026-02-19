@@ -19,10 +19,9 @@ def creer_qr(url: str, nom_fichier: str, dossier_output=None) -> str:
         img = qrcode.make(url)
         img.save(chemin_qr)
 
-        print(f"QR code cree : {chemin_qr}")
+        print(f"QR code crée : {chemin_qr}")
         return str(chemin_qr)
 
     except Exception as e:
-        print("Erreur creation QR :", e)
+        print("Erreur création QR :", e)
         return None
-

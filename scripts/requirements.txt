@@ -6,3 +6,6 @@ qrcode
 pillow
 reportlab
 sacrebleu
+pymupdf
+python-docx
+docx2pdf

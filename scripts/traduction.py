@@ -23,7 +23,7 @@ def traduire_deepl(texte: str, langue_cible: str) -> str:
 
         langue = langue_map.get(langue_cible.lower())
         if not langue:
-            print("Langue non supportГ©e :", langue_cible)
+            print("Langue non supportée :", langue_cible)
             return None
 
         result = translator_deepl.translate_text(
@@ -82,13 +82,13 @@ def traduire_texte_complet(texte: str, langues=None) -> Dict:
 
         traductions[langue] = {}
 
-        print("  в†’ DeepL...")
+        print(" DeepL...")
         trad_deepl = traduire_deepl(texte, langue)
         traductions[langue]["deepl"] = trad_deepl
 
         time.sleep(1)
 
-        print("  в†’ Microsoft...")
+        print(" Microsoft...")
         trad_ms = traduire_microsoft(texte, langue)
         traductions[langue]["microsoft"] = trad_ms
 
