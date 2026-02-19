@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
-  <title>surveillance_ru_deepl</title>
+  <title>Прослушать на русском</title>
   <style>
     body {
       margin: 0;
@@ -15,54 +15,81 @@
       color: #10243e;
     }
     .card {
-      width: min(92vw, 560px);
+      width: min(94vw, 640px);
       background: white;
-      border-radius: 18px;
-      padding: 28px;
+      border-radius: 20px;
+      padding: 30px;
       box-shadow: 0 14px 30px rgba(16, 36, 62, 0.15);
       text-align: center;
     }
     h1 {
       margin: 0 0 18px;
-      font-size: 1.35rem;
+      font-size: 1.6rem;
       word-break: break-word;
     }
     .controls {
       display: grid;
-      gap: 12px;
+      gap: 14px;
       grid-template-columns: repeat(2, 1fr);
-      margin-top: 12px;
+      margin-top: 16px;
     }
     button {
-      min-height: 56px;
+      min-height: 96px;
       border: none;
-      border-radius: 12px;
-      font-size: 1.1rem;
-      font-weight: 700;
+      border-radius: 16px;
       cursor: pointer;
       color: white;
       background: #1f6feb;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      font-weight: 700;
+    }
+    .icon {
+      font-size: 2.2rem;
+      line-height: 1;
+    }
+    .txt {
+      font-size: 1rem;
+      line-height: 1;
+    }
+    button.primary {
+      background: #1761cc;
     }
     button.secondary {
-      background: #2b8a3e;
+      background: #1f7a3a;
     }
     .time {
-      margin-top: 14px;
-      font-size: 1rem;
+      margin-top: 16px;
+      font-size: 1.05rem;
       color: #2f4868;
     }
   </style>
 </head>
 <body>
   <main class="card">
-    <h1>surveillance_ru_deepl</h1>
+    <h1>Прослушать на русском</h1>
     <audio id="player" preload="metadata" src="https://daryazdr.github.io/Gestion-de-projet-M1-IDL-UGA/audio/surveillance_ru_deepl.mp3"></audio>
 
     <div class="controls">
-      <button type="button" onclick="seek(-5)">- 5 sec</button>
-      <button type="button" onclick="seek(5)">+ 5 sec</button>
-      <button type="button" class="secondary" onclick="playAudio()">Play</button>
-      <button type="button" class="secondary" onclick="pauseAudio()">Pause</button>
+      <button type="button" class="primary" aria-label="Reculer 5 secondes" onclick="seek(-5)">
+        <span class="icon">⏪</span>
+        <span class="txt">5 sec</span>
+      </button>
+      <button type="button" class="primary" aria-label="Avancer 5 secondes" onclick="seek(5)">
+        <span class="icon">⏩</span>
+        <span class="txt">5 sec</span>
+      </button>
+      <button type="button" class="secondary" aria-label="Lecture" onclick="playAudio()">
+        <span class="icon">▶</span>
+        <span class="txt">Play</span>
+      </button>
+      <button type="button" class="secondary" aria-label="Pause" onclick="pauseAudio()">
+        <span class="icon">⏸</span>
+        <span class="txt">Pause</span>
+      </button>
     </div>
 
     <p class="time" id="time">00:00 / 00:00</p>
