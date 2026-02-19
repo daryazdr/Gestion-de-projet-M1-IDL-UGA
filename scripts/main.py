@@ -20,29 +20,21 @@ EXTRACTED_IMG_DIR = DATA_DIR / "images_extraites"
 def lire_txt(path):
     for enc in ("utf-8", "cp1252", "latin-1"):
         try:
-            with open(path, "r", encoding=enc) as f:
-                return f.read()
+            return Path(path).read_text(encoding=enc)
         except UnicodeDecodeError:
             continue
     raise ValueError(f"Impossible de lire le fichier texte: {path}")
 
 
-def enregistrer_image_unique(
-    image_bytes, extension, nom_base, prefixe, index, hashes, images
-):
+def ajouter_image_unique(image_bytes, extension, out_path, seen_hashes, images):
     if not image_bytes:
         return
-
-    image_hash = hashlib.sha1(image_bytes).hexdigest()
-    if image_hash in hashes:
+    h = hashlib.sha1(image_bytes).hexdigest()
+    if h in seen_hashes:
         return
-
-    hashes.add(image_hash)
-    ext = (extension or "png").lower()
-    image_path = EXTRACTED_IMG_DIR / f"{nom_base}_{prefixe}_{index}.{ext}"
-    with open(image_path, "wb") as f:
-        f.write(image_bytes)
-    images.append(str(image_path))
+    seen_hashes.add(h)
+    out_path.write_bytes(image_bytes)
+    images.append(str(out_path))
 
 
 def lire_pdf(path, nom_base):
@@ -51,50 +43,35 @@ def lire_pdf(path, nom_base):
     doc = fitz.open(str(path))
     textes = []
     images = []
-    hashes_images = set()
-    compteur = 1
+    seen_hashes = set()
+    index = 1
 
-    for page_index, page in enumerate(doc, start=1):
+    for page_num, page in enumerate(doc, start=1):
         textes.append(page.get_text())
 
-        # Methode 1: extraction originale via xref (meilleure qualite)
+        # Methode 1: images standard du PDF
         for img in page.get_images(full=True):
-            xref = img[0]
             try:
-                image_info = doc.extract_image(xref)
-                image_bytes = image_info.get("image")
-                extension = image_info.get("ext", "png")
-                enregistrer_image_unique(
-                    image_bytes,
-                    extension,
-                    nom_base,
-                    f"pdf_p{page_index}",
-                    compteur,
-                    hashes_images,
-                    images,
-                )
-                compteur += 1
+                info = doc.extract_image(img[0])
+                ext = info.get("ext", "png")
+                out = EXTRACTED_IMG_DIR / f"{nom_base}_pdf_p{page_num}_{index}.{ext}"
+                ajouter_image_unique(info.get("image"), ext, out, seen_hashes, images)
+                index += 1
             except Exception:
                 pass
 
-        # Methode 2: images inline (certaines images ne sont pas dans get_images)
+        # Methode 2: images inline (pas toujours detectees par get_images)
         try:
-            page_dict = page.get_text("dict")
-            for block in page_dict.get("blocks", []):
+            for block in page.get_text("dict").get("blocks", []):
                 if block.get("type") != 1:
                     continue
-                image_bytes = block.get("image")
-                extension = block.get("ext", "png")
-                enregistrer_image_unique(
-                    image_bytes,
-                    extension,
-                    nom_base,
-                    f"pdf_inline_p{page_index}",
-                    compteur,
-                    hashes_images,
-                    images,
+                ext = block.get("ext", "png")
+                out = (
+                    EXTRACTED_IMG_DIR
+                    / f"{nom_base}_pdf_inline_p{page_num}_{index}.{ext}"
                 )
-                compteur += 1
+                ajouter_image_unique(block.get("image"), ext, out, seen_hashes, images)
+                index += 1
         except Exception:
             pass
 
@@ -109,21 +86,15 @@ def lire_docx(path, nom_base):
     texte = "\n".join(p.text for p in doc.paragraphs if p.text).strip()
 
     images = []
-    image_id = 1
+    i = 1
     for rel in doc.part.rels.values():
         if "image" not in rel.reltype:
             continue
-
-        blob = rel.target_part.blob
-        content_type = rel.target_part.content_type
-        extension = content_type.split("/")[-1]
-        image_path = EXTRACTED_IMG_DIR / f"{nom_base}_docx_{image_id}.{extension}"
-
-        with open(image_path, "wb") as f:
-            f.write(blob)
-
+        extension = rel.target_part.content_type.split("/")[-1]
+        image_path = EXTRACTED_IMG_DIR / f"{nom_base}_docx_{i}.{extension}"
+        image_path.write_bytes(rel.target_part.blob)
         images.append(str(image_path))
-        image_id += 1
+        i += 1
 
     return texte, images
 
@@ -145,20 +116,15 @@ def lire_document(path):
 
 def ecrire_fichier(texte, path):
     path.parent.mkdir(parents=True, exist_ok=True)
-    with open(path, "w", encoding="utf-8") as f:
-        f.write(texte)
+    Path(path).write_text(texte, encoding="utf-8")
 
 
 def pause_verification(etape, fichiers):
     print(f"\nVerification manuelle, etape : {etape}")
     for fichier in fichiers:
         print(f"Fichier : {fichier}")
-    reponse = (
-        input("Appuyez sur Entree pour continuer (ou tapez q pour arreter) : ")
-        .strip()
-        .lower()
-    )
-    return reponse != "q"
+    reponse = input("Appuyez sur Entree pour continuer (ou tapez q pour arreter) : ")
+    return reponse.strip().lower() != "q"
 
 
 def demander_service():
@@ -173,13 +139,19 @@ def demander_service():
         print("Choix invalide. Ecrivez deepl ou microsoft.")
 
 
+def generer_audio_qr(texte, langue, nom_audio):
+    audio_path = generer_audio(texte, langue, nom_audio)
+    player_url = upload_github_pages(audio_path) if audio_path else None
+    qr_path = creer_qr(player_url, nom_audio) if player_url else None
+    return audio_path, player_url, qr_path
+
+
 def traiter_fiche(chemin_fiche):
     chemin_fiche = Path(chemin_fiche)
+    nom_base = chemin_fiche.stem
     print(f"Traitement de : {chemin_fiche}")
 
-    nom_base = chemin_fiche.stem
-
-    # 1) Lecture du document source (txt/pdf/docx)
+    # 1) Lecture
     texte_original, images_source = lire_document(chemin_fiche)
 
     # 2) FALC
@@ -194,43 +166,35 @@ def traiter_fiche(chemin_fiche):
     if not pause_verification("FALC", [str(falc_path)]):
         return
 
-    # 3) Traductions depuis texte original
+    # 3) Traductions (plus de pause ici)
     print("\nTraductions multilingues...")
     traductions = traduire_texte_complet(texte_original)
     if not traductions:
         print("Echec traductions")
         return
 
-    fichiers_traduits = []
     for langue, versions in traductions.items():
         for service, texte in versions.items():
             if not texte:
                 continue
             out_path = DATA_DIR / "traductions" / f"{nom_base}_{langue}_{service}.txt"
             ecrire_fichier(texte, out_path)
-            fichiers_traduits.append(str(out_path))
 
-    if not pause_verification("traductions", fichiers_traduits):
-        return
-
-    # 4) Choix service pour audios traduits
+    # 4) Service audio
     choix_service = demander_service()
 
-    # 5) Audios + upload GitHub Pages + QR
+    # 5) Audios + QR
     print("\nGeneration des audios et QR...")
     fichiers_audio_qr = []
     documents = []
 
-    # Document FALC
+    # FALC
     nom_audio_falc = f"{nom_base}_falc_microsoft"
-    audio_falc_path = generer_audio(texte_falc, "fr", nom_audio_falc)
-    falc_url = upload_github_pages(audio_falc_path) if audio_falc_path else None
-    falc_qr_path = creer_qr(falc_url, nom_audio_falc) if falc_url else None
-
-    if audio_falc_path:
-        fichiers_audio_qr.append(audio_falc_path)
-    if falc_qr_path:
-        fichiers_audio_qr.append(falc_qr_path)
+    audio_falc, url_falc, qr_falc = generer_audio_qr(texte_falc, "fr", nom_audio_falc)
+    if audio_falc:
+        fichiers_audio_qr.append(audio_falc)
+    if qr_falc:
+        fichiers_audio_qr.append(qr_falc)
 
     documents.append(
         {
@@ -238,25 +202,23 @@ def traiter_fiche(chemin_fiche):
             "section": {
                 "titre": "Texte FALC (FR)",
                 "texte": texte_falc,
-                "qr_path": falc_qr_path,
-                "audio_url": falc_url,
+                "qr_path": qr_falc,
+                "audio_url": url_falc,
                 "langue": "fr",
             },
         }
     )
 
-    # Documents traductions (service choisi)
+    # Traductions
     for langue, versions in traductions.items():
         texte_final = versions.get(choix_service)
         if not texte_final:
-            print(f"Pas de traduction {choix_service} pour {langue}")
             continue
 
         nom_audio = f"{nom_base}_{langue}_{choix_service}"
-        audio_path = generer_audio(texte_final, langue, nom_audio)
-        audio_url = upload_github_pages(audio_path) if audio_path else None
-        qr_path = creer_qr(audio_url, nom_audio) if audio_url else None
-
+        audio_path, audio_url, qr_path = generer_audio_qr(
+            texte_final, langue, nom_audio
+        )
         if audio_path:
             fichiers_audio_qr.append(audio_path)
         if qr_path:
@@ -278,10 +240,10 @@ def traiter_fiche(chemin_fiche):
     if not pause_verification("audios et QR", fichiers_audio_qr):
         return
 
-    # 6) Un DOCX par texte (normalement 5)
+    # 6) DOCX (1 fichier par langue)
     fichiers_docx = []
-    for doc_info in documents:
-        docx_path = creer_docx(doc_info["doc_id"], [doc_info["section"]], images_source)
+    for doc in documents:
+        docx_path = creer_docx(doc["doc_id"], [doc["section"]], images_source)
         if docx_path:
             fichiers_docx.append(docx_path)
 
@@ -292,19 +254,20 @@ def traiter_fiche(chemin_fiche):
     if not pause_verification("DOCX editable", fichiers_docx):
         return
 
-    # 7) Un PDF final par DOCX
+    # 7) PDF finaux (plus de pause ici)
     fichiers_pdf = []
     for docx_path in fichiers_docx:
         pdf_path = exporter_docx_vers_pdf(docx_path)
         if pdf_path:
             fichiers_pdf.append(pdf_path)
 
-    if fichiers_pdf:
-        pause_verification("PDF final", fichiers_pdf)
+    print("\nPDF crees:")
+    for pdf in fichiers_pdf:
+        print("-", pdf)
 
     print("\nPipeline termine pour :", nom_base)
 
 
 if __name__ == "__main__":
-    entree = DATA_DIR / "input" / "surveillance.pdf"
+    entree = DATA_DIR / "input" / "surveillance2.docx"
     traiter_fiche(entree)

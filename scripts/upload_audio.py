@@ -15,17 +15,14 @@ GITHUB_REPO = getattr(config, "GITHUB_REPO", "") if config else ""
 GITHUB_PAGES_BASE_URL = getattr(config, "GITHUB_PAGES_BASE_URL", "") if config else ""
 GITHUB_PAGES_BRANCH = "main"
 
-# GitHub Pages publie depuis main/docs
 AUDIO_REPO_DIR = "docs/audio"
 PLAYER_REPO_DIR = "docs/player"
-
-# URL publique (sans docs/)
 AUDIO_WEB_DIR = "audio"
 PLAYER_WEB_DIR = "player"
 
-LANG_PAGE_LABELS = {
-    "ru": "Прослушать на русском",
+LANG_TITLES = {
     "fr": "Ecouter en francais",
+    "ru": "Прослушать на русском",
     "en": "Listen in English",
     "ar": "الاستماع بالعربية",
     "tr": "Turkce dinleyin",
@@ -34,135 +31,55 @@ LANG_PAGE_LABELS = {
 
 def normaliser_repo(repo):
     repo = (repo or "").strip()
-    if not repo:
-        return ""
-
-    if repo.startswith("http://") or repo.startswith("https://"):
-        repo = repo.rstrip("/")
-        if repo.endswith(".git"):
-            repo = repo[:-4]
-        if "github.com/" in repo:
-            repo = repo.split("github.com/", 1)[1]
-
+    if "github.com/" in repo:
+        repo = repo.split("github.com/", 1)[1]
+    if repo.endswith(".git"):
+        repo = repo[:-4]
     return repo.strip("/")
 
 
-def detecter_langue_depuis_nom(nom_audio):
+def detecter_langue(nom_audio):
     tokens = nom_audio.lower().split("_")
     if "falc" in tokens:
         return "fr"
-
     for token in reversed(tokens):
-        if token in LANG_PAGE_LABELS:
+        if token in LANG_TITLES:
             return token
-
     return "fr"
 
 
-def texte_titre_player(nom_audio):
-    langue = detecter_langue_depuis_nom(nom_audio)
-    return LANG_PAGE_LABELS.get(langue, LANG_PAGE_LABELS["fr"])
-
-
 def construire_page_player(nom_audio, audio_url):
-    titre_page = texte_titre_player(nom_audio)
+    langue = detecter_langue(nom_audio)
+    titre = LANG_TITLES.get(langue, LANG_TITLES["fr"])
 
     return f"""<!doctype html>
 <html lang=\"fr\">
 <head>
   <meta charset=\"utf-8\">
   <meta name=\"viewport\" content=\"width=device-width, initial-scale=1\">
-  <title>{titre_page}</title>
+  <title>{titre}</title>
   <style>
-    body {{
-      margin: 0;
-      min-height: 100vh;
-      display: grid;
-      place-items: center;
-      background: linear-gradient(135deg, #f7f9fc, #e7eef8);
-      font-family: Arial, sans-serif;
-      color: #10243e;
-    }}
-    .card {{
-      width: min(94vw, 640px);
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 14px 30px rgba(16, 36, 62, 0.15);
-      text-align: center;
-    }}
-    h1 {{
-      margin: 0 0 18px;
-      font-size: 1.6rem;
-      word-break: break-word;
-    }}
-    .controls {{
-      display: grid;
-      gap: 14px;
-      grid-template-columns: repeat(2, 1fr);
-      margin-top: 16px;
-    }}
-    button {{
-      min-height: 96px;
-      border: none;
-      border-radius: 16px;
-      cursor: pointer;
-      color: white;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      font-weight: 700;
-    }}
-    .icon {{
-      font-size: 2.2rem;
-      line-height: 1;
-    }}
-    .txt {{
-      font-size: 1rem;
-      line-height: 1;
-    }}
-    button.seek {{
-      background: #1761cc;
-    }}
-    button.play {{
-      background: #1f7a3a;
-    }}
-    button.pause {{
-      background: #c93131;
-    }}
-    .time {{
-      margin-top: 16px;
-      font-size: 1.05rem;
-      color: #2f4868;
-    }}
+    body {{ margin:0; min-height:100vh; display:grid; place-items:center; background:#eef4fb; font-family:Arial,sans-serif; }}
+    .card {{ width:min(94vw,640px); background:#fff; border-radius:20px; padding:30px; text-align:center; box-shadow:0 14px 30px rgba(16,36,62,.15); }}
+    .controls {{ display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:16px; }}
+    button {{ min-height:96px; border:none; border-radius:16px; color:white; cursor:pointer; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }}
+    .seek {{ background:#1761cc; }}
+    .play {{ background:#1f7a3a; }}
+    .pause {{ background:#c93131; }}
+    .icon {{ font-size:2.2rem; line-height:1; }}
+    .time {{ margin-top:16px; color:#2f4868; }}
   </style>
 </head>
 <body>
   <main class=\"card\">
-    <h1>{titre_page}</h1>
+    <h1>{titre}</h1>
     <audio id=\"player\" preload=\"metadata\" src=\"{audio_url}\"></audio>
-
     <div class=\"controls\">
-      <button type=\"button\" class=\"seek\" aria-label=\"Reculer 5 secondes\" onclick=\"seek(-5)\">
-        <span class=\"icon\">⏪</span>
-        <span class=\"txt\">5 sec</span>
-      </button>
-      <button type=\"button\" class=\"seek\" aria-label=\"Avancer 5 secondes\" onclick=\"seek(5)\">
-        <span class=\"icon\">⏩</span>
-        <span class=\"txt\">5 sec</span>
-      </button>
-      <button type=\"button\" class=\"play\" aria-label=\"Lecture\" onclick=\"playAudio()\">
-        <span class=\"icon\">▶</span>
-        <span class=\"txt\">Play</span>
-      </button>
-      <button type=\"button\" class=\"pause\" aria-label=\"Pause\" onclick=\"pauseAudio()\">
-        <span class=\"icon\">⏸</span>
-        <span class=\"txt\">Pause</span>
-      </button>
+      <button class=\"seek\" onclick=\"seek(-5)\"><span class=\"icon\">⏪</span><span>5 sec</span></button>
+      <button class=\"seek\" onclick=\"seek(5)\"><span class=\"icon\">⏩</span><span>5 sec</span></button>
+      <button class=\"play\" onclick=\"playAudio()\"><span class=\"icon\">▶</span><span>Play</span></button>
+      <button class=\"pause\" onclick=\"pauseAudio()\"><span class=\"icon\">⏸</span><span>Pause</span></button>
     </div>
-
     <p class=\"time\" id=\"time\">00:00 / 00:00</p>
   </main>
 
@@ -177,16 +94,12 @@ def construire_page_player(nom_audio, audio_url):
       return `${{m}}:${{sec}}`;
     }}
 
-    function refreshTime() {{
-      timeEl.textContent = `${{fmt(player.currentTime)}} / ${{fmt(player.duration)}}`;
-    }}
-
+    function refreshTime() {{ timeEl.textContent = `${{fmt(player.currentTime)}} / ${{fmt(player.duration)}}`; }}
     function playAudio() {{ player.play(); }}
     function pauseAudio() {{ player.pause(); }}
     function seek(delta) {{
       const maxDuration = Number.isFinite(player.duration) ? player.duration : player.currentTime + delta;
-      const next = Math.max(0, Math.min(maxDuration, player.currentTime + delta));
-      player.currentTime = next;
+      player.currentTime = Math.max(0, Math.min(maxDuration, player.currentTime + delta));
       refreshTime();
     }}
 
@@ -200,7 +113,6 @@ def construire_page_player(nom_audio, audio_url):
 
 def github_put_file(repo, chemin_repo, contenu_bytes, message):
     api_url = f"https://api.github.com/repos/{repo}/contents/{chemin_repo}"
-
     headers = {
         "Accept": "application/vnd.github+json",
         "Authorization": f"Bearer {GITHUB_TOKEN}",
@@ -208,14 +120,11 @@ def github_put_file(repo, chemin_repo, contenu_bytes, message):
     }
 
     sha = None
-    response_get = requests.get(
-        api_url,
-        headers=headers,
-        params={"ref": GITHUB_PAGES_BRANCH},
-        timeout=30,
+    r_get = requests.get(
+        api_url, headers=headers, params={"ref": GITHUB_PAGES_BRANCH}, timeout=30
     )
-    if response_get.status_code == 200:
-        sha = response_get.json().get("sha")
+    if r_get.status_code == 200:
+        sha = r_get.json().get("sha")
 
     payload = {
         "message": message,
@@ -230,7 +139,6 @@ def github_put_file(repo, chemin_repo, contenu_bytes, message):
 
 def upload_github_pages(chemin_fichier):
     repo = normaliser_repo(GITHUB_REPO)
-
     if not GITHUB_TOKEN or not repo or not GITHUB_PAGES_BASE_URL:
         print(
             "Config GitHub manquante: GITHUB_TOKEN, GITHUB_REPO, GITHUB_PAGES_BASE_URL"
@@ -242,43 +150,31 @@ def upload_github_pages(chemin_fichier):
         print("Fichier introuvable:", chemin_fichier)
         return None
 
+    # 1) Upload audio
     audio_repo_path = f"{AUDIO_REPO_DIR}/{fichier.name}"
-    response_audio = github_put_file(
-        repo,
-        audio_repo_path,
-        fichier.read_bytes(),
-        f"upload audio {fichier.name}",
+    r_audio = github_put_file(
+        repo, audio_repo_path, fichier.read_bytes(), f"upload audio {fichier.name}"
     )
-    if response_audio.status_code not in [200, 201]:
-        print(
-            "Erreur upload audio GitHub:",
-            response_audio.status_code,
-            response_audio.text,
-        )
+    if r_audio.status_code not in [200, 201]:
+        print("Erreur upload audio GitHub:", r_audio.status_code, r_audio.text)
         return None
 
     audio_web_path = f"{AUDIO_WEB_DIR}/{fichier.name}"
-    audio_url_public = f"{GITHUB_PAGES_BASE_URL.rstrip('/')}/{quote(audio_web_path)}"
+    audio_url = f"{GITHUB_PAGES_BASE_URL.rstrip('/')}/{quote(audio_web_path)}"
 
-    player_filename = f"{fichier.stem}.html"
-    player_repo_path = f"{PLAYER_REPO_DIR}/{player_filename}"
-    html = construire_page_player(fichier.stem, audio_url_public)
+    # 2) Upload page HTML player
+    player_name = f"{fichier.stem}.html"
+    player_repo_path = f"{PLAYER_REPO_DIR}/{player_name}"
+    html = construire_page_player(fichier.stem, audio_url)
 
-    response_player = github_put_file(
-        repo,
-        player_repo_path,
-        html.encode("utf-8"),
-        f"upload player {player_filename}",
+    r_player = github_put_file(
+        repo, player_repo_path, html.encode("utf-8"), f"upload player {player_name}"
     )
-    if response_player.status_code not in [200, 201]:
-        print(
-            "Erreur upload player GitHub:",
-            response_player.status_code,
-            response_player.text,
-        )
+    if r_player.status_code not in [200, 201]:
+        print("Erreur upload player GitHub:", r_player.status_code, r_player.text)
         return None
 
-    player_web_path = f"{PLAYER_WEB_DIR}/{player_filename}"
+    player_web_path = f"{PLAYER_WEB_DIR}/{player_name}"
     player_url = f"{GITHUB_PAGES_BASE_URL.rstrip('/')}/{quote(player_web_path)}"
     print("Upload GitHub Pages OK (player):", player_url)
     return player_url
