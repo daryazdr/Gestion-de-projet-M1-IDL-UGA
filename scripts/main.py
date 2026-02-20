@@ -99,6 +99,36 @@ def lire_docx(path, nom_base):
     return texte, images
 
 
+def convertir_doc_en_docx(path_doc):
+    """
+    Convertit un fichier .doc en .docx avec Microsoft Word (Windows).
+    Retourne le chemin du .docx.
+    """
+    try:
+        import win32com.client  # pywin32
+    except Exception as e:
+        raise RuntimeError(
+            "Lecture .doc: installez pywin32 (pip install pywin32) et Microsoft Word"
+        ) from e
+
+    path_doc = Path(path_doc).resolve()
+    path_docx = path_doc.with_name(f"{path_doc.stem}_converted.docx")
+
+    word = win32com.client.Dispatch("Word.Application")
+    word.Visible = False
+    doc = None
+    try:
+        doc = word.Documents.Open(str(path_doc))
+        # 16 = wdFormatDocumentDefault (.docx)
+        doc.SaveAs(str(path_docx), FileFormat=16)
+    finally:
+        if doc is not None:
+            doc.Close(False)
+        word.Quit()
+
+    return path_docx
+
+
 def lire_document(path):
     path = Path(path)
     suffix = path.suffix.lower()
@@ -110,8 +140,11 @@ def lire_document(path):
         return lire_pdf(path, nom_base)
     if suffix == ".docx":
         return lire_docx(path, nom_base)
+    if suffix == ".doc":
+        docx_path = convertir_doc_en_docx(path)
+        return lire_docx(docx_path, nom_base)
 
-    raise ValueError("Format non supporte. Utilisez .txt, .pdf ou .docx")
+    raise ValueError("Format non supporte. Utilisez .txt, .pdf, .docx ou .doc")
 
 
 def ecrire_fichier(texte, path):
@@ -269,5 +302,5 @@ def traiter_fiche(chemin_fiche):
 
 
 if __name__ == "__main__":
-    entree = DATA_DIR / "input" / "surveillance2.docx"
+    entree = DATA_DIR / "input" / "diete.doc"
     traiter_fiche(entree)
