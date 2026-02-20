@@ -13,10 +13,10 @@ except Exception:
 GITHUB_TOKEN = getattr(config, "GITHUB_TOKEN", "") if config else ""
 GITHUB_REPO = getattr(config, "GITHUB_REPO", "") if config else ""
 GITHUB_PAGES_BASE_URL = getattr(config, "GITHUB_PAGES_BASE_URL", "") if config else ""
-GITHUB_PAGES_BRANCH = "main"
+GITHUB_PAGES_BRANCH = "gh-pages"
 
-AUDIO_REPO_DIR = "docs/audio"
-PLAYER_REPO_DIR = "docs/player"
+AUDIO_REPO_DIR = "audio"
+PLAYER_REPO_DIR = "player"
 AUDIO_WEB_DIR = "audio"
 PLAYER_WEB_DIR = "player"
 

@@ -1,19 +1,9 @@
-# Generated content
-docs/audio/
-docs/player/
-docs/pdf/
-docs/docx/
-docs/qr/
-docs/images_extraites/
-docs/traductions/
-docs/falc/
-docs/input/
-
 # Byte-compiled / optimized / DLL files
 .env
 config.py
 __pycache__/
 *.py[codz]
+*.pyc
 *$py.class
 
 # C extensions
@@ -148,6 +138,7 @@ celerybeat.pid
 *.sage.py
 
 # Environments
+scripts/env/
 .env
 .envrc
 .venv
