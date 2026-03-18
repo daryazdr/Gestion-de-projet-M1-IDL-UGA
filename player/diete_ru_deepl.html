@@ -5,8 +5,13 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>Прослушать на русском</title>
   <style>
-    body { margin:0; min-height:100vh; display:grid; place-items:center; background:#eef4fb; font-family:Arial,sans-serif; }
-    .card { width:min(94vw,640px); background:#fff; border-radius:20px; padding:30px; text-align:center; box-shadow:0 14px 30px rgba(16,36,62,.15); }
+    body { margin:0; background:#eef4fb; font-family:Arial,sans-serif; }
+    .wrapper { width:min(94vw,900px); margin:30px auto; }
+    .card { background:#fff; border-radius:20px; padding:30px; box-shadow:0 14px 30px rgba(16,36,62,.15); }
+    h1 { text-align:center; margin-top:0; }
+    .audio-block { margin-top:28px; padding-top:20px; border-top:1px solid #d9e2ef; }
+    .audio-block:first-of-type { border-top:none; padding-top:0; }
+    h2 { color:#16324f; }
     .controls { display:grid; grid-template-columns:repeat(2,1fr); gap:14px; margin-top:16px; }
     button { min-height:96px; border:none; border-radius:16px; color:white; cursor:pointer; font-weight:700; display:flex; flex-direction:column; align-items:center; justify-content:center; gap:6px; }
     .seek { background:#1761cc; }
@@ -17,21 +22,83 @@
   </style>
 </head>
 <body>
-  <main class="card">
-    <h1>Прослушать на русском</h1>
-    <audio id="player" preload="metadata" src="https://daryazdr.github.io/Gestion-de-projet-M1-IDL-UGA/audio/diete_ru_deepl.mp3"></audio>
-    <div class="controls">
-      <button class="seek" onclick="seek(-5)"><span class="icon">⏪</span><span>5 sec</span></button>
-      <button class="seek" onclick="seek(5)"><span class="icon">⏩</span><span>5 sec</span></button>
-      <button class="play" onclick="playAudio()"><span class="icon">▶</span><span>Play</span></button>
-      <button class="pause" onclick="pauseAudio()"><span class="icon">⏸</span><span>Pause</span></button>
+  <main class="wrapper">
+    <div class="card">
+      <h1>Прослушать на русском</h1>
+      
+    <section class="audio-block">
+      <h2>ПРОДУКТЫ, КОТОРЫХ СЛЕДУЕТ ИЗБЕГАТЬ</h2>
+      <audio id="player_sec1" preload="metadata" src="https://daryazdr.github.io/Gestion-de-projet-M1-IDL-UGA/audio/diete_ru_deepl_eviter.mp3"></audio>
+      <div class="controls">
+        <button class="seek" onclick="seek('player_sec1', 'time_sec1', -5)">
+          <span class="icon">⏪</span><span>5 sec</span>
+        </button>
+        <button class="seek" onclick="seek('player_sec1', 'time_sec1', 5)">
+          <span class="icon">⏩</span><span>5 sec</span>
+        </button>
+        <button class="play" onclick="playAudio('player_sec1')">
+          <span class="icon">▶</span><span>Play</span>
+        </button>
+        <button class="pause" onclick="pauseAudio('player_sec1')">
+          <span class="icon">⏸</span><span>Pause</span>
+        </button>
+      </div>
+      <p class="time" id="time_sec1">00:00 / 00:00</p>
+    </section>
+    
+
+    <section class="audio-block">
+      <h2>РЕКОМЕНДУЕМЫЕ ПРОДУКТЫ</h2>
+      <audio id="player_sec2" preload="metadata" src="https://daryazdr.github.io/Gestion-de-projet-M1-IDL-UGA/audio/diete_ru_deepl_conseilles.mp3"></audio>
+      <div class="controls">
+        <button class="seek" onclick="seek('player_sec2', 'time_sec2', -5)">
+          <span class="icon">⏪</span><span>5 sec</span>
+        </button>
+        <button class="seek" onclick="seek('player_sec2', 'time_sec2', 5)">
+          <span class="icon">⏩</span><span>5 sec</span>
+        </button>
+        <button class="play" onclick="playAudio('player_sec2')">
+          <span class="icon">▶</span><span>Play</span>
+        </button>
+        <button class="pause" onclick="pauseAudio('player_sec2')">
+          <span class="icon">⏸</span><span>Pause</span>
+        </button>
+      </div>
+      <p class="time" id="time_sec2">00:00 / 00:00</p>
+    </section>
+    
+
+    <section class="audio-block">
+      <h2>ТИПИЧНЫЙ ДЕНЬ</h2>
+      <audio id="player_sec3" preload="metadata" src="https://daryazdr.github.io/Gestion-de-projet-M1-IDL-UGA/audio/diete_ru_deepl_journee_type.mp3"></audio>
+      <div class="controls">
+        <button class="seek" onclick="seek('player_sec3', 'time_sec3', -5)">
+          <span class="icon">⏪</span><span>5 sec</span>
+        </button>
+        <button class="seek" onclick="seek('player_sec3', 'time_sec3', 5)">
+          <span class="icon">⏩</span><span>5 sec</span>
+        </button>
+        <button class="play" onclick="playAudio('player_sec3')">
+          <span class="icon">▶</span><span>Play</span>
+        </button>
+        <button class="pause" onclick="pauseAudio('player_sec3')">
+          <span class="icon">⏸</span><span>Pause</span>
+        </button>
+      </div>
+      <p class="time" id="time_sec3">00:00 / 00:00</p>
+    </section>
+    
     </div>
-    <p class="time" id="time">00:00 / 00:00</p>
   </main>
 
   <script>
-    const player = document.getElementById('player');
-    const timeEl = document.getElementById('time');
+    function getPlayer(playerId) {
+      return document.getElementById(playerId);
+    }
+
+    function getTimeEl(timeId) {
+      return document.getElementById(timeId);
+    }
 
     function fmt(s) {
       if (!Number.isFinite(s)) return '00:00';
@@ -40,17 +107,42 @@
       return `${m}:${sec}`;
     }
 
-    function refreshTime() { timeEl.textContent = `${fmt(player.currentTime)} / ${fmt(player.duration)}`; }
-    function playAudio() { player.play(); }
-    function pauseAudio() { player.pause(); }
-    function seek(delta) {
-      const maxDuration = Number.isFinite(player.duration) ? player.duration : player.currentTime + delta;
-      player.currentTime = Math.max(0, Math.min(maxDuration, player.currentTime + delta));
-      refreshTime();
+    function refreshTime(playerId, timeId) {
+      const player = getPlayer(playerId);
+      const timeEl = getTimeEl(timeId);
+      timeEl.textContent = `${fmt(player.currentTime)} / ${fmt(player.duration)}`;
     }
 
-    player.addEventListener('timeupdate', refreshTime);
-    player.addEventListener('loadedmetadata', refreshTime);
+    function playAudio(playerId) {
+      getPlayer(playerId).play();
+    }
+
+    function pauseAudio(playerId) {
+      getPlayer(playerId).pause();
+    }
+
+    function seek(playerId, timeId, delta) {
+      const player = getPlayer(playerId);
+      const maxDuration = Number.isFinite(player.duration) ? player.duration : player.currentTime + delta;
+      player.currentTime = Math.max(0, Math.min(maxDuration, player.currentTime + delta));
+      refreshTime(playerId, timeId);
+    }
+
+    window.addEventListener('load', function() {
+      const audios = document.querySelectorAll('audio');
+      audios.forEach(function(audio) {
+        const playerId = audio.id;
+        const timeId = playerId.replace('player_', 'time_');
+
+        audio.addEventListener('timeupdate', function() {
+          refreshTime(playerId, timeId);
+        });
+
+        audio.addEventListener('loadedmetadata', function() {
+          refreshTime(playerId, timeId);
+        });
+      });
+    });
   </script>
 </body>
 </html>
