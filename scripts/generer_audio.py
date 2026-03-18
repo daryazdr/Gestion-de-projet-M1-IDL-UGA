@@ -18,19 +18,17 @@ VOIX = {
 
 
 def generer_audio(texte, langue, nom_fichier):
-    """
-    Cree un mp3 avec Microsoft Edge TTS.
-    """
+    """Cree un MP3 avec Microsoft Edge TTS."""
     try:
         AUDIO_DIR.mkdir(parents=True, exist_ok=True)
         voix = VOIX.get(langue.lower(), VOIX["fr"])
         sortie = AUDIO_DIR / f"{nom_fichier}.mp3"
 
-        async def _run():
+        async def sauvegarder_audio():
             tts = edge_tts.Communicate(texte, voix)
             await tts.save(str(sortie))
 
-        asyncio.run(_run())
+        asyncio.run(sauvegarder_audio())
 
         print("Audio crée:", sortie)
         return str(sortie)

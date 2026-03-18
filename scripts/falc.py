@@ -1,63 +1,58 @@
-import os
 from groq import Groq
+
 from config import GROQ_API_KEY
+
+
+SYSTEM_MESSAGE = (
+    "Tu es un assistant specialise en simplification FALC pour des textes medicaux."
+)
+MODEL_NAME = "llama-3.3-70b-versatile"
 
 
 def construire_prompt_falc(texte_original: str) -> str:
     return f"""
-Tu es expert en simplification FALC (Facile à Lire et à Comprendre).
+Tu es expert en simplification FALC (Facile a Lire et a Comprendre).
 
-Règles de simplification :
+Regles de simplification :
     - Phrases courtes. Chaque phrase nouvelle commence sur une nouvelle ligne.
-    - 1 idée par phrase. Chaque phrase termine par un point.
-    - Vocabulaire simple et courant
-    - Éviter métaphores, abréviations, initiales, acronymes, les expliquer si utilisées dans le texte, 
-    pas en note de bas de page
-    - Expliquer termes médicaux et concepts difficiles
-    - S'adresser directement aux personnes en utilisant des mots comme « vous »
-    - Utiliser des phrases positives plutôt que la négation
-    - Utiliser des phrases actives plutôt que des phrases passives
-    - Le style, la police, la mise en forme et le type d'écriture sont identiques tout au long du texte
-    - Les pages sont numérotées (de la manière suivante : « page 2 sur 4 »)
+    - 1 idee par phrase. Chaque phrase termine par un point.
+    - Vocabulaire simple et courant.
+    - Eviter metaphores, abreviations, initiales, acronymes.
+    - Expliquer les termes medicaux et concepts difficiles.
+    - S'adresser directement aux personnes avec des mots comme "vous".
+    - Utiliser des phrases positives plutot que la negation.
+    - Utiliser des phrases actives plutot que des phrases passives.
+    - Garder une mise en forme coherente dans tout le texte.
+    - Les pages sont numerotees (exemple : "page 2 sur 4").
 
 Simplifie ce texte et :
-- Garde TOUTES les informations médicales, ne supprime rien
-- Ne change pas le sens médical
-- Reste précis sur les consignes de santé
-- Ne jamais modifier les valeurs numériques, unités, posologies
+- Garde TOUTES les informations medicales, ne supprime rien.
+- Ne change pas le sens medical.
+- Reste precis sur les consignes de sante.
+- Ne jamais modifier les valeurs numeriques, unites, posologies.
 
-Texte à simplifier :
+Texte a simplifier :
 {texte_original}
 """
 
 
+def creer_client_groq() -> Groq:
+    return Groq(api_key=GROQ_API_KEY)
+
+
 def simplifier_falc(texte_original: str) -> str:
-    """
-    Simplifie un texte médical en FALC avec Groq.
-    Retourne le texte simplifié ou None en cas d'erreur.
-    """
-
+    """Simplifie un texte medical en FALC avec Groq."""
     try:
-        client = Groq(api_key=GROQ_API_KEY)
-        prompt = construire_prompt_falc(texte_original)
-
-        # Appel
+        client = creer_client_groq()
         response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
+            model=MODEL_NAME,
             messages=[
-                {
-                    "role": "system",
-                    "content": "Tu es un assistant spécialisé en simplification FALC pour des textes médicaux.",
-                },
-                {"role": "user", "content": prompt},
+                {"role": "system", "content": SYSTEM_MESSAGE},
+                {"role": "user", "content": construire_prompt_falc(texte_original)},
             ],
             max_tokens=2000,
         )
-
-        # Récupération du texte généré
-        texte_simplifie = response.choices[0].message.content
-        return texte_simplifie
-
+        return response.choices[0].message.content
     except Exception as e:
         print("Erreur simplification FALC :", e)
         return None
