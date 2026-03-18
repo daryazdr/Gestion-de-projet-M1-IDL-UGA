@@ -1,9 +1,3 @@
-Marsilya, ...............
- 
-M'DEN.........................................
-                                                                                               
-Yazan: Diyetisyen
-Diyetetik Bölümü - Hôpital Nord - Chemin des Bourrely - 13015 MARSEILLE 
 KAÇINMASI GEREKEN GİDALAR
 Şeker, bal, reçel, jöle, kestane kreması, Nutella.
   
@@ -18,7 +12,9 @@ Meyve suları, şuruplar, gazozlar, Coca-Cola, hepsi mağazadan alınan şekerli
 Hepsi alkollü içecekler.
 Soya ve soya ürünleri (tofu)
 Asitli veya baharatlı yiyecekler.
-                                 ÖNERILEN GIMALARI
+                                 AL
+
+ÖNERILEN MALZEMELER
 HAYVANSAL PROTEİ: günde en az 1 porsiyon			
 		
 Etler: sığır eti, dana eti, kuzu, domuz, tavuk, tavşan, gine tovu, hindi, poult.
@@ -53,7 +49,9 @@ Patates: püre, buharda pişirilmiş, patates kızartması, patates kızartması
 Baklagiller: bezelye, flageolet fasulyesi, mercimek, nohut, mısır, geniş fasulye, beyaz veya kırmızı fasulye, bölünmüş bezelye ve manyok, yeşil muz, yam vb.
 			
 Tipik bir gün
-KAHVALTİ:
+KAHVALTI
+
+EUNER:
  İçki: çay, kahve, kakao
  Bir süt ürünü: süt, süt, peynir
 Yavaş bir şeker: tam unlu veya şekersiz tahıl ekmek + tereyağı
