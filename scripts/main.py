@@ -43,6 +43,64 @@ TITRES_SECTIONS = {
     },
 }
 
+SECTION_SEPARATOR = "\n\n=====SECTION=====\n\n"
+
+
+def joindre_sections_diete(sections):
+    return SECTION_SEPARATOR.join(
+        section["texte"] for section in sections if section.get("texte")
+    )
+
+
+def relire_traductions_diete(fichiers_traductions):
+    traductions = {}
+
+    for fichier in fichiers_traductions:
+        texte = lire_txt(fichier)
+        parts = fichier.stem.split("_")
+        langue = parts[-2]
+        service = parts[-1]
+
+        morceaux = [morceau.strip() for morceau in texte.split(SECTION_SEPARATOR)]
+        morceaux = [morceau for morceau in morceaux if morceau]
+
+        if len(morceaux) != 3:
+            print(
+                f"Erreur: le fichier {fichier.name} doit contenir 3 sections séparées par {SECTION_SEPARATOR!r}."
+            )
+            return None
+
+        sections = [
+            {"cle": "eviter", "texte": morceaux[0]},
+            {"cle": "conseilles", "texte": morceaux[1]},
+            {"cle": "journee_type", "texte": morceaux[2]},
+        ]
+
+        traductions.setdefault(langue, {})[service] = sections
+
+    return traductions
+
+
+def construire_document_falc_diete(nom_base, sections_falc, qr_falc, url_falc):
+    sections_doc = []
+
+    for section in sections_falc:
+        cle = section["cle"]
+        sections_doc.append(
+            {
+                "titre": TITRES_SECTIONS[cle]["fr"],
+                "texte": section["texte"],
+                "qr_path": qr_falc,
+                "audio_url": url_falc,
+                "langue": "fr",
+            }
+        )
+
+    return {
+        "doc_id": f"{nom_base}_falc",
+        "sections": sections_doc,
+    }
+
 
 def lire_txt(path):
     for encodage in ("utf-8", "cp1252", "latin-1"):
@@ -311,9 +369,7 @@ def sauvegarder_traductions_diete(nom_base, traductions):
         for service, sections in versions.items():
             if not sections:
                 continue
-            texte_complet = "\n\n".join(
-                section["texte"] for section in sections if section["texte"]
-            )
+            texte_complet = joindre_sections_diete(sections)
             out_path = DATA_DIR / "traductions" / f"{nom_base}_{langue}_{service}.txt"
             ecrire_fichier(texte_complet, out_path)
 
@@ -392,26 +448,65 @@ def creer_section_doc_diete(cle, langue, texte_section):
     }
 
 
-def construire_documents_diete(nom_base, traductions, choix_service, fichiers_audio_qr):
+def construire_documents_diete(nom_base, traductions, choix_service, qr_data):
 
     documents = []
 
     for langue, versions in traductions.items():
 
-        texte_complet = versions.get(choix_service)
+        sections_traduites = versions.get(choix_service)
 
-        if not texte_complet:
+        if not sections_traduites:
             continue
 
-        sections = decouper_sections_diete(texte_complet)
+        url_page, qr_path = qr_data.get(
+            f"{nom_base}_{langue}_{choix_service}",
+            (None, None),
+        )
 
-        if not sections:
-            continue
-
-        sections_html = []
         sections_doc = []
 
-        for section in sections:
+        for section in sections_traduites:
+
+            cle = section["cle"]
+            texte_section = section["texte"]
+
+            sous_titre = TITRES_SECTIONS[cle].get(langue, TITRES_SECTIONS[cle]["fr"])
+
+            sections_doc.append(
+                {
+                    "titre": sous_titre,
+                    "texte": texte_section,
+                    "qr_path": qr_path,
+                    "audio_url": url_page,
+                    "langue": langue,
+                }
+            )
+
+        documents.append(
+            {
+                "doc_id": f"{nom_base}_{langue}_{choix_service}",
+                "sections": sections_doc,
+            }
+        )
+
+    return documents
+
+
+def generer_audios_traductions_diete(nom_base, traductions, choix_service):
+
+    audios_par_langue = {}
+
+    for langue, versions in traductions.items():
+
+        sections_traduites = versions.get(choix_service)
+
+        if not sections_traduites:
+            continue
+
+        audios_par_langue[langue] = []
+
+        for section in sections_traduites:
 
             cle = section["cle"]
             texte_section = section["texte"]
@@ -427,70 +522,35 @@ def construire_documents_diete(nom_base, traductions, choix_service, fichiers_au
             )
 
             if audio_path:
-                fichiers_audio_qr.append(audio_path)
-
-                sections_html.append(
+                audios_par_langue[langue].append(
                     {
+                        "cle": cle,
                         "titre": sous_titre,
                         "audio_path": audio_path,
                     }
                 )
 
-            sections_doc.append(
-                {
-                    "titre": sous_titre,
-                    "texte": texte_section,
-                    "qr_path": None,
-                    "audio_url": None,
-                    "langue": langue,
-                }
-            )
-
-        if not sections_html:
-            continue
-
-        page_url = upload_github_pages_multi(
-            sections_html,
-            nom_page=f"{nom_base}_{langue}_{choix_service}",
-            langue=langue,
-        )
-
-        qr_path = None
-
-        if page_url:
-            qr_path = creer_qr(
-                page_url,
-                f"{nom_base}_{langue}_{choix_service}",
-            )
-
-            if qr_path:
-                fichiers_audio_qr.append(qr_path)
-
-        for section_doc in sections_doc:
-
-            section_doc["qr_path"] = qr_path
-            section_doc["audio_url"] = page_url
-
-        documents.append(
-            {
-                "doc_id": f"{nom_base}_{langue}_{choix_service}",
-                "sections": sections_doc,
-            }
-        )
-
-    return documents
+    return audios_par_langue
 
 
-def preparer_traductions(doc_type, texte_original):
+def preparer_traductions(doc_type, texte_source):
+
+    # cas normal
     if doc_type != "diete":
-        return traduire_texte_complet(texte_original)
+        return traduire_texte_complet(texte_source)
 
-    sections_fr = decouper_sections_diete(texte_original)
+    # cas fiche diete
+
+    sections_fr = decouper_sections_diete(texte_source)
+
     if not sections_fr:
-        print("Echec decoupage diete")
+        print("Impossible de découper les sections diète")
         return None
 
-    return traduire_sections_diete(sections_fr)
+    # traduire chaque section séparément
+    traductions = traduire_sections_diete(sections_fr)
+
+    return traductions
 
 
 def creer_tous_les_docx(documents, images_source):
@@ -551,79 +611,218 @@ def traiter_fiche(chemin_fiche):
         return
 
     # relire traductions modifiées
-    traductions = {}
+    if doc_type == "diete":
+        traductions = relire_traductions_diete(fichiers_traductions)
+        if not traductions:
+            return
+    else:
+        traductions = {}
 
-    for fichier in fichiers_traductions:
+        for fichier in fichiers_traductions:
 
-        texte = lire_txt(fichier)
+            texte = lire_txt(fichier)
 
-        parts = fichier.stem.split("_")
+            parts = fichier.stem.split("_")
 
-        langue = parts[-2]
-        service = parts[-1]
+            langue = parts[-2]
+            service = parts[-1]
 
-        if langue not in traductions:
-            traductions[langue] = {}
+            if langue not in traductions:
+                traductions[langue] = {}
 
-        traductions[langue][service] = texte
+            traductions[langue][service] = texte
 
     choix_service = demander_service()
 
-    # -------------------
-    # AUDIOS
-    # -------------------
-
-    print("\nGeneration des audios...")
-
-    audios = []
-
-    audio_falc = generer_audio(texte_falc, "fr", f"{nom_base}_falc")
-
-    if audio_falc:
-        audios.append(audio_falc)
-
-    for langue, versions in traductions.items():
-
-        texte = versions.get(choix_service)
-
-        if not texte:
-            continue
-
-        nom_audio = f"{nom_base}_{langue}_{choix_service}"
-
-        audio = generer_audio(texte, langue, nom_audio)
-
-        if audio:
-            audios.append(audio)
-
-    if not pause_verification("audios", audios):
-        return
-
-    # vérifier que les fichiers existent
-    audios = [a for a in audios if Path(a).exists()]
-
-    # -------------------
-    # QR
-    # -------------------
-
-    print("\nGeneration QR...")
-
-    fichiers_audio_qr = []
     qr_data = {}
 
-    for audio in audios:
+    # -------------------
+    # AUDIOS + QR
+    # -------------------
 
-        nom = Path(audio).stem
+    if doc_type == "diete":
+        sections_falc = decouper_sections_diete(texte_falc)
 
-        url, qr = generer_qr_depuis_audio(audio, nom)
+        if not sections_falc:
+            print("Impossible de découper les 3 sections FALC.")
+            return
 
-        if qr:
-            fichiers_audio_qr.append(qr)
+        # -------------------
+        # AUDIOS FALC
+        # -------------------
 
-        qr_data[nom] = (url, qr)
+        print("\nGeneration des audios FALC...")
 
-    if not pause_verification("QR", fichiers_audio_qr):
-        return
+        audios_falc = []
+        sections_html_falc = []
+
+        for section in sections_falc:
+            cle = section["cle"]
+            nom_audio = f"{nom_base}_falc_{cle}"
+
+            audio_path = generer_audio_seul(section["texte"], "fr", nom_audio)
+
+            if audio_path:
+                audios_falc.append(audio_path)
+                sections_html_falc.append(
+                    {
+                        "titre": TITRES_SECTIONS[cle]["fr"],
+                        "audio_path": audio_path,
+                    }
+                )
+
+        if not pause_verification("audios FALC", audios_falc):
+            return
+
+        # relire les audios FALC réellement présents après modification manuelle
+        sections_html_falc = [
+            section
+            for section in sections_html_falc
+            if Path(section["audio_path"]).exists()
+        ]
+
+        # -------------------
+        # QR FALC
+        # -------------------
+
+        print("\nGeneration QR FALC...")
+
+        url_falc = None
+        qr_falc = None
+        qr_falc_files = []
+
+        if sections_html_falc:
+            url_falc = upload_github_pages_multi(
+                sections_html_falc,
+                nom_page=f"{nom_base}_falc",
+                langue="fr",
+            )
+
+            if url_falc:
+                qr_falc = creer_qr(url_falc, f"{nom_base}_falc")
+
+                if qr_falc:
+                    qr_falc_files.append(qr_falc)
+
+        qr_data[f"{nom_base}_falc"] = (url_falc, qr_falc)
+
+        if not pause_verification("QR FALC", qr_falc_files):
+            return
+
+        # -------------------
+        # AUDIOS TRADUCTIONS
+        # -------------------
+
+        print("\nGeneration des audios de traduction...")
+
+        audios_traductions = generer_audios_traductions_diete(
+            nom_base,
+            traductions,
+            choix_service,
+        )
+
+        fichiers_audios_traductions = []
+
+        for langue, items in audios_traductions.items():
+            for item in items:
+                if Path(item["audio_path"]).exists():
+                    fichiers_audios_traductions.append(item["audio_path"])
+
+        if not pause_verification("audios traductions", fichiers_audios_traductions):
+            return
+
+        # relire les audios réellement présents après modification manuelle
+        for langue, items in audios_traductions.items():
+            audios_traductions[langue] = [
+                item for item in items if Path(item["audio_path"]).exists()
+            ]
+
+        # -------------------
+        # QR TRADUCTIONS
+        # -------------------
+
+        print("\nGeneration QR traductions...")
+
+        qr_traductions_files = []
+
+        for langue, items in audios_traductions.items():
+            if not items:
+                continue
+
+            page_url = upload_github_pages_multi(
+                [
+                    {
+                        "titre": item["titre"],
+                        "audio_path": item["audio_path"],
+                    }
+                    for item in items
+                ],
+                nom_page=f"{nom_base}_{langue}_{choix_service}",
+                langue=langue,
+            )
+
+            qr_path = None
+
+            if page_url:
+                qr_path = creer_qr(
+                    page_url,
+                    f"{nom_base}_{langue}_{choix_service}",
+                )
+
+                if qr_path:
+                    qr_traductions_files.append(qr_path)
+
+            qr_data[f"{nom_base}_{langue}_{choix_service}"] = (page_url, qr_path)
+
+        if not pause_verification("QR traductions", qr_traductions_files):
+            return
+
+    else:
+        print("\nGeneration des audios...")
+
+        audios = []
+        fichiers_qr = []
+
+        audio_falc = generer_audio(texte_falc, "fr", f"{nom_base}_falc")
+
+        if audio_falc:
+            audios.append(audio_falc)
+
+        for langue, versions in traductions.items():
+
+            texte = versions.get(choix_service)
+
+            if not texte:
+                continue
+
+            nom_audio = f"{nom_base}_{langue}_{choix_service}"
+
+            audio = generer_audio(texte, langue, nom_audio)
+
+            if audio:
+                audios.append(audio)
+
+        if not pause_verification("audios", audios):
+            return
+
+        # vérifier que les fichiers existent
+        audios = [a for a in audios if Path(a).exists()]
+
+        print("\nGeneration QR...")
+
+        for audio in audios:
+
+            nom = Path(audio).stem
+
+            url, qr = generer_qr_depuis_audio(audio, nom)
+
+            if qr:
+                fichiers_qr.append(qr)
+
+            qr_data[nom] = (url, qr)
+
+        if not pause_verification("QR", fichiers_qr):
+            return
 
     # -------------------
     # DOCUMENTS
@@ -631,36 +830,45 @@ def traiter_fiche(chemin_fiche):
 
     documents = []
 
-    url_falc, qr_falc = qr_data.get(f"{nom_base}_falc", (None, None))
-
-    documents.append(
-        construire_document_falc(
-            nom_base,
-            texte_falc,
-            qr_falc,
-            url_falc,
-        )
-    )
-
     if doc_type == "diete":
+        sections_falc = decouper_sections_diete(texte_falc)
+        url_falc, qr_falc = qr_data.get(f"{nom_base}_falc", (None, None))
+
+        documents.append(
+            construire_document_falc_diete(
+                nom_base,
+                sections_falc,
+                qr_falc,
+                url_falc,
+            )
+        )
 
         documents.extend(
             construire_documents_diete(
                 nom_base,
                 traductions,
                 choix_service,
-                fichiers_audio_qr,
+                qr_data,
             )
         )
-
     else:
+        url_falc, qr_falc = qr_data.get(f"{nom_base}_falc", (None, None))
+
+        documents.append(
+            construire_document_falc(
+                nom_base,
+                texte_falc,
+                qr_falc,
+                url_falc,
+            )
+        )
 
         documents.extend(
             construire_documents_standard(
                 nom_base,
                 traductions,
                 choix_service,
-                fichiers_audio_qr,
+                [],
             )
         )
 
@@ -677,5 +885,5 @@ def traiter_fiche(chemin_fiche):
 
 
 if __name__ == "__main__":
-    entree = DATA_DIR / "input" / "diete.doc"
+    entree = DATA_DIR / "input" / "surveillance.docx"
     traiter_fiche(entree)

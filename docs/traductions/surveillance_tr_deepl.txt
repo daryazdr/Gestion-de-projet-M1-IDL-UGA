@@ -1,20 +1,29 @@
-Ellerinizi ılık su ve sabunla iyice yıkayın
-Ellerinizi iyice kurulayın
-Alkol veya krem kullanmayın
-
- Parmağınızı ovun
- Başparmağı ve işaret parmağını ya da parmak ucunu delmeyin 
- İşaret parmağı veya başparmağın yan tarafını delin 
-Parmağın etrafında döndürün 🖐 
- DİKKAT:   Lanseti her seferinde değiştirin, tek kullanımlıktır 
+Başlamadan önce: 
+Ellerinizi ılık su ve sabunla yıkayın. 
+Ellerinizi iyice kurulayın. 
+Uyarı: Ellerinize alkol veya krem sürmeyin.
  
- Günde 6 kez kontrol edin 
- -   Sabah aç karnına
-             -  Kahvaltıya başladıktan 2 saat sonra 
- -    Öğle yemeğinden önce 
- -    Yemeğe başladıktan 2 saat sonra
- -   Akşam yemeğinden önce 
- -    Akşam yemeğine başladıktan 2 saat sonra 
-Sonuçlar 
-Yemeklerden önce 0,95 g/L'den fazla olmamalı
-Yemeklerden 2 saat sonra 120'den fazla olmamalı
+Parmak delme işlemi nasıl yapılmalıdır?
+Kan örneği alırken, delmek istediğiniz parmak ucuna doğru hafifçe masaj yapın. 
+
+Delme bölgesi neresi olmalıdır?
+Başparmağınızı ve işaret parmağınızı delmeyin.
+Parmak ucunun tam orta noktasını delmeyin.
+Parmağınızın yan kısımlarını delin.
+Her seferinde farklı bir parmağı ve farklı bir yeri tercih etmelisiniz.
+
+Uyarı: Kan örneği alırken her seferinde yeni bir iğne kullanın. İğne sadece bir kez kullanılmalıdır. 
+
+Ölçüm ne zaman yapılmalıdır?
+Günde 6 kez ölçüm yapmalısınız:
+Sabah: Uyandığınızda, yemek yemeden veya içmeden önce (aç karnına).
+Kahvaltıdan sonra: Yemeğe başladıktan 2 saat sonra.
+Öğle yemeğinden önce.
+Öğle yemeğinden sonra: Yemeğe başladıktan 2 saat sonra.
+Akşam yemeğinden önce.
+Akşam yemeğinden sonra: Yemeğe başladıktan 2 saat sonra.
+
+Sonuçlar
+Sonuçları kaydetmek önemlidir.
+Yemeklerden önce ölçüm değeri 0,95 g/L'den küçük olmalıdır.
+Yemeklerden iki saat sonra ölçüm değeri 1,20 g/L'den küçük olmalıdır.
