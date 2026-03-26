@@ -232,14 +232,32 @@ def trouver_position_titre(texte_original, titre_recherche):
 
 
 def decouper_sections_diete(texte):
-    titres = ["ALIMENTS A EVITER", "ALIMENTS CONSEILLES", "JOURNEE TYPE"]
-    positions = [trouver_position_titre(texte, titre) for titre in titres]
 
-    if any(position == -1 for position in positions):
+    texte_lower = texte.lower()
+
+    # mots clés pour trouver les sections
+    mots_interdits = ["interdits", "éviter", "eviter"]
+    mots_conseilles = ["conseillés", "conseilles", "recommandés", "recommandes"]
+    mots_journee = ["journée", "journee", "repas"]
+
+    def trouver_position(mots):
+        for mot in mots:
+            pos = texte_lower.find(mot)
+            if pos != -1:
+                return pos
+        return -1
+
+    pos1 = trouver_position(mots_interdits)
+    pos2 = trouver_position(mots_conseilles)
+    pos3 = trouver_position(mots_journee)
+
+    if -1 in [pos1, pos2, pos3]:
         print("Impossible de trouver les 3 sections dans le document diete.")
-        return []
+        return None
 
+    positions = sorted([pos1, pos2, pos3])
     pos1, pos2, pos3 = positions
+
     return [
         {"cle": "eviter", "texte": texte[pos1:pos2].strip()},
         {"cle": "conseilles", "texte": texte[pos2:pos3].strip()},
@@ -247,11 +265,14 @@ def decouper_sections_diete(texte):
     ]
 
 
-def generer_audio_qr(texte, langue, nom_audio):
-    audio_path = generer_audio(texte, langue, nom_audio)
+def generer_audio_seul(texte, langue, nom_audio):
+    return generer_audio(texte, langue, nom_audio)
+
+
+def generer_qr_depuis_audio(audio_path, nom_audio):
     player_url = upload_github_pages(audio_path) if audio_path else None
     qr_path = creer_qr(player_url, nom_audio) if player_url else None
-    return audio_path, player_url, qr_path
+    return player_url, qr_path
 
 
 def traduire_sections_diete(sections):
@@ -484,15 +505,30 @@ def traiter_fiche(chemin_fiche):
 
     choix_service = demander_service()
 
-    print("\nGeneration des audios et QR...")
+    print("\nGeneration des audios")
     fichiers_audio_qr = []
 
     nom_audio_falc = f"{nom_base}_falc_microsoft"
-    audio_falc, url_falc, qr_falc = generer_audio_qr(texte_falc, "fr", nom_audio_falc)
+    audio_falc = generer_audio_seul(texte_falc, "fr", nom_audio_falc)
+    audios_generes = []
+    if audio_falc:
+        audios_generes.append(audio_falc)
+
+    if not pause_verification("audios", audios_generes):
+        return
+
+    print("\nGeneration des QRs")
+
+    url_falc, qr_falc = generer_qr_depuis_audio(audio_falc, nom_audio_falc)
+
+    fichiers_audio_qr = []
     if audio_falc:
         fichiers_audio_qr.append(audio_falc)
     if qr_falc:
         fichiers_audio_qr.append(qr_falc)
+
+    if not pause_verification("QRc", fichiers_audio_qr):
+        return
 
     documents = [construire_document_falc(nom_base, texte_falc, qr_falc, url_falc)]
 

@@ -1,4 +1,4 @@
-KAÇINMASI GEREKEN GİDALAR
+KAÇIN
 Şeker, bal, reçel, jöle, kestane kreması, Nutella.
   
 Tatlılar, karameller, nuga, tatlılar.
@@ -12,9 +12,9 @@ Meyve suları, şuruplar, gazozlar, Coca-Cola, hepsi mağazadan alınan şekerli
 Hepsi alkollü içecekler.
 Soya ve soya ürünleri (tofu)
 Asitli veya baharatlı yiyecekler.
-                                 AL
+                                 YEMEK
 
-ÖNERILEN MALZEMELER
+TAVSIYE EDILIYOR
 HAYVANSAL PROTEİ: günde en az 1 porsiyon			
 		
 Etler: sığır eti, dana eti, kuzu, domuz, tavuk, tavşan, gine tovu, hindi, poult.
@@ -47,11 +47,9 @@ Ekmek: ya da rusk, sandviç ekmek....
 Mısırlar: makarna, pirinç, irmik, polenta, pilpil, kuskus...  
 Patates: püre, buharda pişirilmiş, patates kızartması, patates kızartması...
 Baklagiller: bezelye, flageolet fasulyesi, mercimek, nohut, mısır, geniş fasulye, beyaz veya kırmızı fasulye, bölünmüş bezelye ve manyok, yeşil muz, yam vb.
-			
-Tipik bir gün
-KAHVALTI
 
-EUNER:
+Tipik bir gün
+KAHVALTİ:
  İçki: çay, kahve, kakao
  Bir süt ürünü: süt, süt, peynir
 Yavaş bir şeker: tam unlu veya şekersiz tahıl ekmek + tereyağı
