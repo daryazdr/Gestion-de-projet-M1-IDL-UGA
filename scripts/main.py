@@ -361,19 +361,11 @@ def construire_documents_standard(
     documents = []
 
     for langue, versions in traductions.items():
+
         texte_final = versions.get(choix_service)
+
         if not texte_final:
             continue
-
-        nom_audio = f"{nom_base}_{langue}_{choix_service}"
-        audio_path, audio_url, qr_path = generer_audio_qr(
-            texte_final, langue, nom_audio
-        )
-
-        if audio_path:
-            fichiers_audio_qr.append(audio_path)
-        if qr_path:
-            fichiers_audio_qr.append(qr_path)
 
         documents.append(
             construire_document_standard(
@@ -381,8 +373,8 @@ def construire_documents_standard(
                 langue,
                 choix_service,
                 texte_final,
-                qr_path,
-                audio_url,
+                None,
+                None,
             )
         )
 
@@ -401,28 +393,58 @@ def creer_section_doc_diete(cle, langue, texte_section):
 
 
 def construire_documents_diete(nom_base, traductions, choix_service, fichiers_audio_qr):
+
     documents = []
 
     for langue, versions in traductions.items():
-        sections_traduites = versions.get(choix_service)
-        if not sections_traduites:
+
+        texte_complet = versions.get(choix_service)
+
+        if not texte_complet:
+            continue
+
+        sections = decouper_sections_diete(texte_complet)
+
+        if not sections:
             continue
 
         sections_html = []
         sections_doc = []
 
-        for section in sections_traduites:
+        for section in sections:
+
             cle = section["cle"]
             texte_section = section["texte"]
+
             sous_titre = TITRES_SECTIONS[cle].get(langue, TITRES_SECTIONS[cle]["fr"])
+
             nom_audio = f"{nom_base}_{langue}_{choix_service}_{cle}"
 
-            audio_path = generer_audio(texte_section, langue, nom_audio)
+            audio_path = generer_audio_seul(
+                texte_section,
+                langue,
+                nom_audio,
+            )
+
             if audio_path:
                 fichiers_audio_qr.append(audio_path)
-                sections_html.append({"titre": sous_titre, "audio_path": audio_path})
 
-            sections_doc.append(creer_section_doc_diete(cle, langue, texte_section))
+                sections_html.append(
+                    {
+                        "titre": sous_titre,
+                        "audio_path": audio_path,
+                    }
+                )
+
+            sections_doc.append(
+                {
+                    "titre": sous_titre,
+                    "texte": texte_section,
+                    "qr_path": None,
+                    "audio_url": None,
+                    "langue": langue,
+                }
+            )
 
         if not sections_html:
             continue
@@ -434,12 +456,18 @@ def construire_documents_diete(nom_base, traductions, choix_service, fichiers_au
         )
 
         qr_path = None
+
         if page_url:
-            qr_path = creer_qr(page_url, f"{nom_base}_{langue}_{choix_service}")
+            qr_path = creer_qr(
+                page_url,
+                f"{nom_base}_{langue}_{choix_service}",
+            )
+
             if qr_path:
                 fichiers_audio_qr.append(qr_path)
 
         for section_doc in sections_doc:
+
             section_doc["qr_path"] = qr_path
             section_doc["audio_url"] = page_url
 
@@ -477,62 +505,145 @@ def creer_tous_les_docx(documents, images_source):
 
 
 def traiter_fiche(chemin_fiche):
+
     chemin_fiche = Path(chemin_fiche)
     nom_base = chemin_fiche.stem
+
     print(f"Traitement de : {chemin_fiche}")
 
     texte_original, images_source = lire_document(chemin_fiche)
     doc_type = type_document(nom_base)
 
+    # -------------------
+    # FALC
+    # -------------------
+
     print("\nSimplification FALC...")
+
     texte_falc = simplifier_falc(texte_original)
-    if not texte_falc:
-        print("Echec simplification FALC")
-        return
 
     falc_path = DATA_DIR / "falc" / f"{nom_base}_falc.txt"
     ecrire_fichier(texte_falc, falc_path)
-    if not pause_verification("FALC", [str(falc_path)]):
+
+    if not pause_verification("FALC", [falc_path]):
         return
 
-    print("\nTraductions multilingues...")
-    traductions = preparer_traductions(doc_type, texte_original)
+    # relire après modification manuelle
+    texte_falc = lire_txt(falc_path)
+
+    # -------------------
+    # TRADUCTIONS
+    # -------------------
+
+    print("\nTraductions...")
+
+    traductions = preparer_traductions(doc_type, texte_falc)
+
     if not traductions:
-        print("Echec traductions")
+        print("Erreur traductions")
         return
 
     sauvegarder_traductions(nom_base, doc_type, traductions)
 
+    fichiers_traductions = list((DATA_DIR / "traductions").glob(f"{nom_base}_*.txt"))
+
+    if not pause_verification("traductions", fichiers_traductions):
+        return
+
+    # relire traductions modifiées
+    traductions = {}
+
+    for fichier in fichiers_traductions:
+
+        texte = lire_txt(fichier)
+
+        parts = fichier.stem.split("_")
+
+        langue = parts[-2]
+        service = parts[-1]
+
+        if langue not in traductions:
+            traductions[langue] = {}
+
+        traductions[langue][service] = texte
+
     choix_service = demander_service()
 
-    print("\nGeneration des audios")
-    fichiers_audio_qr = []
+    # -------------------
+    # AUDIOS
+    # -------------------
 
-    nom_audio_falc = f"{nom_base}_falc_microsoft"
-    audio_falc = generer_audio_seul(texte_falc, "fr", nom_audio_falc)
-    audios_generes = []
+    print("\nGeneration des audios...")
+
+    audios = []
+
+    audio_falc = generer_audio(texte_falc, "fr", f"{nom_base}_falc")
+
     if audio_falc:
-        audios_generes.append(audio_falc)
+        audios.append(audio_falc)
 
-    if not pause_verification("audios", audios_generes):
+    for langue, versions in traductions.items():
+
+        texte = versions.get(choix_service)
+
+        if not texte:
+            continue
+
+        nom_audio = f"{nom_base}_{langue}_{choix_service}"
+
+        audio = generer_audio(texte, langue, nom_audio)
+
+        if audio:
+            audios.append(audio)
+
+    if not pause_verification("audios", audios):
         return
 
-    print("\nGeneration des QRs")
+    # vérifier que les fichiers existent
+    audios = [a for a in audios if Path(a).exists()]
 
-    url_falc, qr_falc = generer_qr_depuis_audio(audio_falc, nom_audio_falc)
+    # -------------------
+    # QR
+    # -------------------
+
+    print("\nGeneration QR...")
 
     fichiers_audio_qr = []
-    if audio_falc:
-        fichiers_audio_qr.append(audio_falc)
-    if qr_falc:
-        fichiers_audio_qr.append(qr_falc)
+    qr_data = {}
 
-    if not pause_verification("QRc", fichiers_audio_qr):
+    for audio in audios:
+
+        nom = Path(audio).stem
+
+        url, qr = generer_qr_depuis_audio(audio, nom)
+
+        if qr:
+            fichiers_audio_qr.append(qr)
+
+        qr_data[nom] = (url, qr)
+
+    if not pause_verification("QR", fichiers_audio_qr):
         return
 
-    documents = [construire_document_falc(nom_base, texte_falc, qr_falc, url_falc)]
+    # -------------------
+    # DOCUMENTS
+    # -------------------
+
+    documents = []
+
+    url_falc, qr_falc = qr_data.get(f"{nom_base}_falc", (None, None))
+
+    documents.append(
+        construire_document_falc(
+            nom_base,
+            texte_falc,
+            qr_falc,
+            url_falc,
+        )
+    )
 
     if doc_type == "diete":
+
         documents.extend(
             construire_documents_diete(
                 nom_base,
@@ -541,7 +652,9 @@ def traiter_fiche(chemin_fiche):
                 fichiers_audio_qr,
             )
         )
+
     else:
+
         documents.extend(
             construire_documents_standard(
                 nom_base,
@@ -551,18 +664,16 @@ def traiter_fiche(chemin_fiche):
             )
         )
 
-    if not pause_verification("audios et QR", fichiers_audio_qr):
-        return
+    # -------------------
+    # DOCX
+    # -------------------
 
     fichiers_docx = creer_tous_les_docx(documents, images_source)
-    if not fichiers_docx:
-        print("Echec creation DOCX")
+
+    if not pause_verification("DOCX", fichiers_docx):
         return
 
-    if not pause_verification("DOCX editable", fichiers_docx):
-        return
-
-    print("\nPipeline termine pour :", nom_base)
+    print("\nPipeline terminé")
 
 
 if __name__ == "__main__":
