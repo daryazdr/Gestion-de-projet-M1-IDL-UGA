@@ -1,39 +1,37 @@
-# Gestion-de-projet-M1-IDL-UGA
+## Gestion-de-projet-M1-IDL-UGA
 
-Projet de Master 1 IDL (2025-2026).
+Projet de Master 1 Industrie de la langue, UGA (2025-2026).
 
-Objectif: rendre des documents medicaux plus accessibles (FALC, traductions, audio, QR, documents finaux).
+Automatisation de la traduction et de l'accessibilité de protocoles médicaux pour patientes allophones atteintes de diabète gestationnel, avec simplification FALC et audio multilingue.
+
+## Contexte du projet
+
+# Problématique
+Le service d'endocrinologie de l'Hôpital Nord de Marseille accueille régulièrement des patientes allophones atteintes de diabète gestationnel. La barrière linguistique, combinée à la complexité des termes médicaux, met en danger l'autonomie des patientes pour réaliser des gestes techniques (injections, mesures glycémiques), comprendre et appliquer les protocoles diététiques et assurer un suivi médical sécurisé.
+
+# Solution proposée
+
+Pipeline automatisé qui transforme les protocoles médicaux français en documents multilingues accessibles.
 
 ## Fonctionnement actuel
 
 Le programme principal est `scripts/main.py`.
 
 Pipeline:
-1. Lecture du document d'entree (`.txt`, `.pdf`, `.docx`, `.doc`).
+1. Lecture du document d'entree (`.txt`, `.pdf`, `.docx`).
 2. Simplification FALC.
 3. Traductions multilingues.
 4. Generation des audios.
-5. Upload GitHub Pages de l'audio + page HTML player.
-6. Generation des QR codes (QR -> page HTML player, pas vers le mp3 direct).
-7. Generation de documents finaux:
-- 1 DOCX par version de texte (FALC + traductions choisies).
-- puis 1 PDF par DOCX.
+5. Upload GitHub Pages de l'audio et QR + page HTML player.
+7. Generation de documents finaux: 1 DOCX par version de texte (FALC + traductions choisies).
 
-En pratique, avec FALC + 4 langues, on obtient 5 DOCX puis 5 PDF.
+En pratique, avec FALC + 4 langues, on obtient 5 DOCX pour chaque fiche.
 
 ## Formats d'entree supportes
 
 - `.txt`
 - `.pdf`
 - `.docx`
-- `.doc`
-
-### Note pour le format `.doc`
-
-Le `.doc` est converti automatiquement en `.docx` via Microsoft Word (Windows).
-Prerequis:
-- Microsoft Word installe
-- `pywin32` installe
 
 ## Player HTML et QR
 
@@ -44,24 +42,50 @@ Pour chaque audio, le script cree une page player HTML avec:
 
 Le QR code et le lien dans le document pointent vers cette page HTML player.
 
-## Arborescence de sortie (dossier `docs/`)
+## Structure du projet
 
-- `docs/falc/` : textes FALC
-- `docs/traductions/` : textes traduits
-- `docs/audio/` : fichiers audio
-- `docs/qr/` : QR codes
-- `docs/docx/` : DOCX finaux
-- `docs/pdf/` : PDF finaux
-- `docs/images_extraites/` : images extraites des documents source
-- `docs/player/` : pages HTML player publiees sur GitHub Pages (via repo)
+protocoles-multilingues/
+├── scripts/               # Code source
+│   ├── main.py           # Pipeline principal
+│   ├── falc.py           # Simplification FALC
+│   ├── traduction.py     # Traductions
+│   ├── generer_audio.py  # Text-to-Speech
+│   ├── upload_audio.py   # GitHub Pages
+│   ├── qr.py             # QR codes
+│   └── docx_builder.py   # Documents Word
+│
+├── docs/                  # Données et résultats
+│   ├── input/            # Documents originaux
+│   ├── falc/             # Textes simplifiés
+│   ├── traductions/      # Traductions
+│   ├── audio/            # Fichiers MP3
+│   ├── qr/               # QR codes
+│   └── docx/             # Documents finaux
+│
+├── config.py             # Configuration
+├── requirements.txt      # Dépendances
+└── README.md            # Documentation
 
 ## Installation
 
-Depuis la racine du projet:
+# Cloner le repository
+git clone https://github.com/VOTRE_USERNAME/protocoles-multilingues.git
+cd protocoles-multilingues
 
-```powershell
-pip install -r scripts/requirements.txt
-```
+# Créer environnement virtuel
+python -m venv venv
+source venv/bin/activate  # Linux/Mac
+# OU
+venv\Scripts\activate  # Windows
+
+# Installer dépendances
+pip install -r requirements.txt
+
+## Prérequis
+
+Python 3.8+
+Git
+Compte GitHub (pour hébergement audio)
 
 ## Configuration
 
@@ -84,22 +108,7 @@ python scripts/main.py
 
 Le fichier d'entree est defini en bas de `scripts/main.py`.
 
-## Scripts de test utiles
-
-### Test upload + QR (sans pipeline complet)
-
-```powershell
-python scripts/test2.py
-```
-
-### Test generation DOCX + PDF a partir des fichiers deja generes
-
-```powershell
-python scripts/test3.py
-```
-
 ## Remarques
 
 - Le programme contient des pauses de verification manuelle pour certaines etapes.
-- Les pauses apres "traductions" et apres generation des PDF ont ete retirees.
 - Si un format n'est pas lisible, verifier encodage/fichier source.
