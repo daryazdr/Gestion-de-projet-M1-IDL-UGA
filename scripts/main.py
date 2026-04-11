@@ -574,9 +574,9 @@ def traiter_fiche(chemin_fiche):
     texte_original, images_source = lire_document(chemin_fiche)
     doc_type = type_document(nom_base)
 
-    # -------------------
+    # -
     # FALC
-    # -------------------
+    # -
 
     print("\nSimplification FALC...")
 
@@ -591,9 +591,9 @@ def traiter_fiche(chemin_fiche):
     # relire après modification manuelle
     texte_falc = lire_txt(falc_path)
 
-    # -------------------
+    # -
     # TRADUCTIONS
-    # -------------------
+    # -
 
     print("\nTraductions...")
 
@@ -636,9 +636,9 @@ def traiter_fiche(chemin_fiche):
 
     qr_data = {}
 
-    # -------------------
+    # -
     # AUDIOS + QR
-    # -------------------
+    # -
 
     if doc_type == "diete":
         sections_falc = decouper_sections_diete(texte_falc)
@@ -647,9 +647,9 @@ def traiter_fiche(chemin_fiche):
             print("Impossible de découper les 3 sections FALC.")
             return
 
-        # -------------------
+        # -
         # AUDIOS FALC
-        # -------------------
+        # -
 
         print("\nGeneration des audios FALC...")
 
@@ -681,9 +681,9 @@ def traiter_fiche(chemin_fiche):
             if Path(section["audio_path"]).exists()
         ]
 
-        # -------------------
+        # -
         # QR FALC
-        # -------------------
+        # -
 
         print("\nGeneration QR FALC...")
 
@@ -709,9 +709,9 @@ def traiter_fiche(chemin_fiche):
         if not pause_verification("QR FALC", qr_falc_files):
             return
 
-        # -------------------
+        # -
         # AUDIOS TRADUCTIONS
-        # -------------------
+        # -
 
         print("\nGeneration des audios de traduction...")
 
@@ -737,9 +737,9 @@ def traiter_fiche(chemin_fiche):
                 item for item in items if Path(item["audio_path"]).exists()
             ]
 
-        # -------------------
+        # -
         # QR TRADUCTIONS
-        # -------------------
+        # -
 
         print("\nGeneration QR traductions...")
 
@@ -824,9 +824,9 @@ def traiter_fiche(chemin_fiche):
         if not pause_verification("QR", fichiers_qr):
             return
 
-    # -------------------
+    # -
     # DOCUMENTS
-    # -------------------
+    # -
 
     documents = []
 
@@ -872,9 +872,9 @@ def traiter_fiche(chemin_fiche):
             )
         )
 
-    # -------------------
+    # -
     # DOCX
-    # -------------------
+    # -
 
     fichiers_docx = creer_tous_les_docx(documents, images_source)
 
